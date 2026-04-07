@@ -47,43 +47,55 @@ static void draw_ui(
 ) {
     char line[128];
     char first_word[64];
+    char typed_line[TYPED_BUFFER_SIZE + 32];
+    int i = 0;
+    int pos = 0;
 
     os_screen_clear();
-    os_screen_draw_text(2, 1, "Typing Tutor - Phase 1");
-    os_screen_draw_text(2, 2, "ESC/q: quit | Backspace: delete | Enter: finish");
+    os_screen_draw_text(2, 1, "==================== Typing Tutor - Phase 1 ====================");
+    os_screen_draw_text(2, 2, "Controls: ESC/q = quit | Backspace = delete | Enter = finish");
 
-    os_screen_draw_text(2, 4, "Target Sentence:");
-    os_screen_draw_text(2, 5, target);
+    os_screen_draw_text(2, 4, "Target Sentence (type this exactly):");
+    os_screen_draw_text(2, 5, ">>");
+    os_screen_draw_text(6, 5, target);
 
     os_split_first_token(target, first_word, 64);
-    os_screen_draw_text(2, 6, "First token from string split():");
-    os_screen_draw_text(36, 6, first_word);
+    os_screen_draw_text(2, 7, "First token from split():");
+    os_screen_draw_text(28, 7, first_word);
 
-    os_screen_draw_text(2, 8, "Your Input:");
-    os_screen_draw_text(2, 9, typed);
+    os_screen_draw_text(2, 9, "Your Input (highlighted):");
+    typed_line[pos++] = '[';
+    typed_line[pos++] = ' ';
+    while (typed[i] != '\0' && pos < TYPED_BUFFER_SIZE + 29) {
+        typed_line[pos++] = typed[i++];
+    }
+    typed_line[pos++] = ' ';
+    typed_line[pos++] = ']';
+    typed_line[pos] = '\0';
+    os_screen_draw_text(2, 10, typed_line);
 
     safe_number_text(line, "Typed chars: ", typed_len);
-    os_screen_draw_text(2, 11, line);
-
-    safe_number_text(line, "Correct chars: ", correct_count);
     os_screen_draw_text(2, 12, line);
 
-    safe_number_text(line, "Total key checks: ", total_count);
+    safe_number_text(line, "Correct chars: ", correct_count);
     os_screen_draw_text(2, 13, line);
 
-    safe_number_text(line, "Progress (%): ", progress_percent);
+    safe_number_text(line, "Total key checks: ", total_count);
     os_screen_draw_text(2, 14, line);
 
-    safe_number_text(line, "Elapsed seconds: ", elapsed_seconds);
+    safe_number_text(line, "Progress (%): ", progress_percent);
     os_screen_draw_text(2, 15, line);
 
-    safe_number_text(line, "Virtual free memory: ", free_bytes);
+    safe_number_text(line, "Elapsed seconds: ", elapsed_seconds);
     os_screen_draw_text(2, 16, line);
 
+    safe_number_text(line, "Virtual free memory: ", free_bytes);
+    os_screen_draw_text(2, 17, line);
+
     if (finished) {
-        os_screen_draw_text(2, 18, "Status: Completed. Press ESC to exit.");
+        os_screen_draw_text(2, 19, "Status: Completed. Press ESC or q to exit.");
     } else {
-        os_screen_draw_text(2, 18, "Status: Running...");
+        os_screen_draw_text(2, 19, "Status: Running...");
     }
 
     os_screen_flush();
