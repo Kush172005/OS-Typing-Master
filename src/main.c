@@ -57,7 +57,9 @@ static void draw_ui(
 
     os_screen_draw_text(2, 4, "Target Sentence (type this exactly):");
     os_screen_draw_text(2, 5, ">>");
+    os_screen_set_color("1;34");
     os_screen_draw_text(6, 5, target);
+    os_screen_reset_color();
 
     os_split_first_token(target, first_word, 64);
     os_screen_draw_text(2, 7, "First token from split():");

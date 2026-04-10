@@ -5,6 +5,8 @@
 void os_screen_clear(void);
 void os_screen_move_cursor(int x, int y);
 void os_screen_draw_text(int x, int y, const char *text);
+void os_screen_set_color(const char *color_code);
+void os_screen_reset_color(void);
 void os_screen_hide_cursor(void);
 void os_screen_show_cursor(void);
 void os_screen_flush(void);
