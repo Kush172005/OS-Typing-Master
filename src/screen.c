@@ -19,6 +19,14 @@ void os_screen_draw_text(int x, int y, const char *text) {
     printf("%s", text);
 }
 
+void os_screen_set_color(const char *color_code) {
+    printf("\033[%sm", color_code);
+}
+
+void os_screen_reset_color(void) {
+    printf("\033[0m");
+}
+
 void os_screen_hide_cursor(void) {
     printf("\033[?25l");
 }
