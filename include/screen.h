@@ -3,8 +3,13 @@
 
 /* Terminal drawing helpers. */
 void os_screen_clear(void);
+/* Move to top-left for a full redraw without erasing the whole screen (less flash). */
+void os_screen_begin_frame(void);
 void os_screen_move_cursor(int x, int y);
 void os_screen_draw_text(int x, int y, const char *text);
+/* Target line: typed chars green/red; untyped positions show dim target text. */
+void os_screen_draw_typing_overlay(int x, int y, const char *target,
+                                   const char *typed, int typed_len);
 void os_screen_set_color(const char *color_code);
 void os_screen_reset_color(void);
 void os_screen_hide_cursor(void);

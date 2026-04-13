@@ -8,6 +8,10 @@ void os_screen_clear(void) {
     printf("\033[H");
 }
 
+void os_screen_begin_frame(void) {
+    printf("\033[H");
+}
+
 /* Move cursor to x,y coordinate. */
 void os_screen_move_cursor(int x, int y) {
     printf("\033[%d;%dH", y, x);
@@ -17,6 +21,33 @@ void os_screen_move_cursor(int x, int y) {
 void os_screen_draw_text(int x, int y, const char *text) {
     os_screen_move_cursor(x, y);
     printf("%s", text);
+    /* Erase to end of line so shorter redraws do not leave stale characters. */
+    printf("\033[K");
+}
+
+void os_screen_draw_typing_overlay(int x, int y, const char *target,
+                                   const char *typed, int typed_len) {
+    int i = 0;
+
+    /* Avoid resetting SGR after every cell; some terminals flash or drop glyphs. */
+    while (target[i] != '\0') {
+        os_screen_move_cursor(x + i, y);
+        if (i < typed_len) {
+            if (typed[i] == target[i]) {
+                os_screen_set_color("1;32");
+            } else {
+                os_screen_set_color("1;31");
+            }
+            printf("%c", typed[i]);
+        } else {
+            os_screen_set_color("2;37");
+            printf("%c", target[i]);
+        }
+        i++;
+    }
+    os_screen_reset_color();
+    os_screen_move_cursor(x + i, y);
+    printf("\033[K");
 }
 
 void os_screen_set_color(const char *color_code) {
