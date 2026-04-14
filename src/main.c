@@ -162,6 +162,14 @@ int main(void) {
 
                     if (typed_len >= target_len) {
                         done = 1;
+                        if (correct_count == target_len) {
+                            // Draw final state once more before breaking
+                            draw_ui(target_sentence, typed_text, typed_len, correct_count, 
+                                    total_checks, 100, (int)(time(NULL) - start_time), 
+                                    os_memory_free_bytes(), 1);
+                            usleep(200000); // 200ms pause to let user see their success
+                            break;
+                        }
                     }
                 }
             }
@@ -189,6 +197,21 @@ int main(void) {
         );
 
         usleep(16000);
+    }
+
+    if (done && typed_len >= target_len) {
+        os_screen_clear();
+        os_screen_set_color("1;33"); // Bold Yellow
+        os_screen_draw_text(20, 10, "**********************************************");
+        os_screen_draw_text(20, 11, "*                                            *");
+        os_screen_set_color("1;32"); // Bold Green
+        os_screen_draw_text(20, 12, "*    CONGRATULATIONS! TYPING SUCCESSFUL!     *");
+        os_screen_set_color("1;33"); // Bold Yellow
+        os_screen_draw_text(20, 13, "*                                            *");
+        os_screen_draw_text(20, 14, "**********************************************");
+        os_screen_reset_color();
+        os_screen_flush();
+        usleep(2000000); // 2 Seconds
     }
 
     os_screen_show_cursor();
