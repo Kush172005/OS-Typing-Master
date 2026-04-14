@@ -10,7 +10,6 @@ typedef struct {
     int next_offset;
 } MemBlock;
 
-/* This is our full virtual RAM region. */
 static union {
     long long alignment;
     unsigned char bytes[OS_VIRTUAL_RAM_SIZE];
@@ -18,7 +17,6 @@ static union {
 
 static int g_initialized = 0;
 
-/* Convert byte offset into block pointer. */
 static MemBlock *block_at_offset(int offset) {
     return (MemBlock *)(void *)(g_virtual_ram.bytes + offset);
 }
@@ -45,7 +43,6 @@ void *os_alloc(int size) {
         return NULL;
     }
 
-    /* First-fit allocation. */
     current_offset = 0;
     while (current_offset != OS_BLOCK_END) {
         MemBlock *block = block_at_offset(current_offset);
@@ -95,7 +92,6 @@ void os_dealloc(void *ptr) {
         current_offset = block->next_offset;
     }
 
-    /* Merge free neighbor blocks to reduce fragmentation. */
     current_offset = 0;
     while (current_offset != OS_BLOCK_END) {
         MemBlock *block = block_at_offset(current_offset);

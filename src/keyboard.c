@@ -7,7 +7,6 @@
 static struct termios g_original_termios;
 static int g_keyboard_ready = 0;
 
-/* Enable raw mode and non-blocking reads from keyboard. */
 int os_keyboard_init(void) {
     struct termios raw;
     int flags;
@@ -38,7 +37,6 @@ int os_keyboard_init(void) {
     return 1;
 }
 
-/* Restore old terminal mode before exit. */
 void os_keyboard_shutdown(void) {
     if (!g_keyboard_ready) {
         return;
@@ -48,7 +46,6 @@ void os_keyboard_shutdown(void) {
     g_keyboard_ready = 0;
 }
 
-/* Return one key if available, else return 0. */
 int os_key_pressed(char *out_key) {
     char c;
     int read_count;
@@ -66,7 +63,6 @@ int os_key_pressed(char *out_key) {
     return 0;
 }
 
-/* Build a full line using repeated key polling. */
 int os_read_line(char *buffer, int max_len) {
     int index = 0;
 

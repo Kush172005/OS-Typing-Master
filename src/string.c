@@ -1,6 +1,6 @@
+#include "math.h"
 #include "string.h"
 
-/* Count characters until null terminator. */
 int os_strlen(const char *text) {
     int length = 0;
 
@@ -11,7 +11,6 @@ int os_strlen(const char *text) {
     return length;
 }
 
-/* Copy source string into destination. */
 void os_strcpy(char *dest, const char *src) {
     int i = 0;
 
@@ -23,7 +22,6 @@ void os_strcpy(char *dest, const char *src) {
     dest[i] = '\0';
 }
 
-/* Compare two strings like standard strcmp. */
 int os_strcmp(const char *a, const char *b) {
     int i = 0;
 
@@ -37,7 +35,6 @@ int os_strcmp(const char *a, const char *b) {
     return (int)((unsigned char)a[i] - (unsigned char)b[i]);
 }
 
-/* Read only the first word token from input. */
 int os_split_first_token(const char *input, char *token_out, int token_max) {
     int i = 0;
     int token_len = 0;
@@ -62,7 +59,6 @@ int os_split_first_token(const char *input, char *token_out, int token_max) {
     return token_len;
 }
 
-/* Convert integer to text without sprintf. */
 void os_int_to_string(int value, char *buffer, int buffer_size) {
     int temp[16];
     int digits = 0;
@@ -86,8 +82,8 @@ void os_int_to_string(int value, char *buffer, int buffer_size) {
     }
 
     while (value > 0 && digits < 16) {
-        temp[digits] = value % 10;
-        value = value / 10;
+        temp[digits] = os_mod(value, 10);
+        value = os_div(value, 10);
         digits++;
     }
 

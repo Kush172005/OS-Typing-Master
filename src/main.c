@@ -10,7 +10,6 @@
 
 #define TYPED_BUFFER_SIZE 256
 
-/* Build one UI line by joining a label and number text. */
 static void safe_number_text(char *dest, const char *label, int value) {
     char num[32];
     int write_index = 0;
@@ -99,7 +98,6 @@ int main(void) {
     char *target_sentence;
     char *typed_text;
 
-    /* This app needs an interactive terminal for live screen control. */
     if (!isatty(STDIN_FILENO) || !isatty(STDOUT_FILENO)) {
         printf("Please run this program in a real terminal (interactive TTY).\n");
         printf("Example: open Terminal app, then run ./typing_tutor\n");
@@ -110,7 +108,6 @@ int main(void) {
 
     target_len = os_strlen(constant_sentence);
 
-    /* Dynamic allocation from custom memory.c */
     target_sentence = (char *)os_alloc(target_len + 1);
     typed_text = (char *)os_alloc(TYPED_BUFFER_SIZE);
 
@@ -133,14 +130,12 @@ int main(void) {
     os_screen_clear();
     start_time = time(NULL);
 
-    /* Main real-time typing loop. */
     while (1) {
         char key;
         int elapsed;
         int progress;
         int free_bytes;
 
-        /* Non-blocking input read. */
         if (os_key_pressed(&key)) {
             if (key == 27 || key == 'q' || key == 'Q') {
                 break;
@@ -154,7 +149,6 @@ int main(void) {
                     typed_text[typed_len] = '\0';
                 }
             } else if (!done) {
-                /* Boundary check using custom math.c helper. */
                 if (os_in_bounds(typed_len, 0, TYPED_BUFFER_SIZE - 1)) {
                     typed_text[typed_len] = key;
                     typed_len++;
@@ -173,7 +167,6 @@ int main(void) {
             }
         }
 
-        /* Clamp keeps percentage inside 0 to 100. */
         progress = 0;
         if (target_len > 0) {
             progress = os_div(os_mul(typed_len, 100), target_len);
@@ -202,7 +195,6 @@ int main(void) {
     os_screen_clear();
     os_keyboard_shutdown();
 
-    /* Matching deallocation for every allocation. */
     os_dealloc(typed_text);
     os_dealloc(target_sentence);
 

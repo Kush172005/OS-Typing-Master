@@ -1,133 +1,53 @@
-# Typing Tutor in C (Phase 1 Ready)
+# Os Typing Master — Phase 1
 
-This project is a **Typing Tutor** built in C from scratch for the capstone rules.
+Terminal typing tutor written in C for the capstone Phase 1 milestone: five custom libraries and one interactive application wired together.
 
-It includes all 5 custom libraries:
-- `math.c/.h`
-- `string.c/.h`
-- `memory.c/.h`
-- `screen.c/.h`
-- `keyboard.c/.h`
+## What evaluators should see
 
-The application runs a real-time typing loop in terminal and integrates all libraries in one pipeline.
+- **Libraries:** `math`, `string`, `memory`, `screen`, and `keyboard` each have a `.c` in `src/` and a matching header in `include/`. Core logic does not use `<string.h>`, `<math.h>`, or `malloc`/`free`.
+- **App:** `main.c` runs a loop that polls the keyboard without blocking, redraws the UI, and uses the libraries end-to-end (strings for the target line and stats, math for bounds/progress, heap for two buffers, screen for ANSI output, keyboard for raw mode).
+- **Behaviour:** The user types over a fixed practice sentence. Correct keys show in green, wrong keys in red, and the rest of the line stays dim until typed. Stats include typed length, correctness, progress, elapsed time, and free heap bytes. `os_split_first_token` is used once on the target string to show the first word on screen (string API demo).
 
-## 1) Project Goal
+## Build and run
 
-Build a working terminal Typing Tutor using only our own core logic (no `string.h`, no `math.h`, no `malloc/free` for project logic).
-
-## 2) Phase 1 Requirements Coverage
-
-### Requirement: 5 core libraries implemented
-Status: Done
-
-- `math.c`: custom multiply, divide, modulo, abs, clamp, bounds check.
-- `string.c`: custom length, copy, compare, split/tokenize, int-to-string.
-- `memory.c`: custom virtual RAM + `os_alloc()` + `os_dealloc()`.
-- `screen.c`: terminal clear, cursor move, draw text, hide/show cursor.
-- `keyboard.c`: non-blocking key read + line read.
-
-### Requirement: library integration into one app
-Status: Done
-
-Pipeline in `main.c`:
-- keyboard input with `os_key_pressed()`
-- string handling with `os_strlen()`, `os_strcpy()`, `os_split_first_token()`, `os_int_to_string()`
-- dynamic memory with `os_alloc()` and `os_dealloc()`
-- boundary/progress math with `os_in_bounds()`, `os_mul()`, `os_div()`, `os_clamp()`
-- rendering with `os_screen_draw_text()` and screen controls
-
-### Requirement: basic real-time interactive loop
-Status: Done
-
-- Continuous loop with non-blocking keyboard input.
-- User types sentence in live screen.
-- ESC exits, Backspace removes characters.
-
-### Requirement: dynamic memory use with matching free
-Status: Done
-
-- Allocated: target sentence copy, typed buffer.
-- Deallocated: both before exit.
-
-### Requirement: boundary math usage
-Status: Done
-
-- Input buffer limits checked using `os_in_bounds()`.
-- Progress percentage clamped by `os_clamp()`.
-
-### Requirement: stability
-Status: Done
-
-- Null checks after allocation.
-- Terminal state restored on exit.
-- No crash in normal run flow.
-
-## 3) Build and Run
-
-### Build
-```bash
-make
-```
-
-### Run
-```bash
-make run
-```
-
-or
-```bash
-./typing_tutor
-```
-
-### Clean
-```bash
-make clean
-```
-
-## 4) Controls
-
-- Type normal keys to enter text.
-- `Backspace` to remove last character.
-- `Enter` to mark complete.
-- `ESC` to exit.
-
-## 5) Folder Structure
-
-- `include/` -> all header files
-- `src/` -> all source files
-- `docs/` -> evaluation support notes
-- `Makefile` -> build commands
-
-## 6) Known Issues / Honest Notes
-
-- This Phase 1 version focuses on one fixed sentence.
-- Arrow keys are not separately parsed as special keys.
-- Color highlighting is not added to keep code simple for evaluation clarity.
-
-## 7) Demo Evidence (for final submission)
-
-Add at least one of below before final ZIP:
-- 3 screenshots of running app
-- or 1-3 minute screen recording
-
-## 8) Important Rule Compliance
-
-- No `<string.h>` functions used.
-- No `<math.h>` functions used.
-- No `malloc()` / `free()` for app memory logic.
-- Core logic uses custom libraries.
-
-## 9) Recommended Commands for Evaluation Day
+Requires a normal interactive terminal (not piped input/output).
 
 ```bash
 make clean && make
 ./typing_tutor
 ```
 
-Then explain files in order:
-1. `memory.c`
-2. `string.c`
-3. `math.c`
-4. `keyboard.c`
-5. `screen.c`
-6. `main.c`
+`make run` runs the binary the same way. Use `make clean` before a fresh build if object files are stale.
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| Letters / space | Type into the lesson line |
+| Backspace | Remove last character |
+| Enter | Mark session finished |
+| ESC or `q` | Quit and restore the terminal |
+
+## Repository layout
+
+| Path | Role |
+|------|------|
+| `include/*.h` | Public declarations for the five modules |
+| `src/*.c` | Implementations + `main.c` |
+| `Makefile` | Builds the `typing_tutor` binary |
+| `docs/` | Optional notes (if present) |
+
+## Phase 1 checklist (mapping)
+
+| Requirement | Where it shows up |
+|-------------|-------------------|
+| Five custom libraries | `src/math.c` … `keyboard.c` |
+| Integrated application | `src/main.c` |
+| Non-blocking input + live redraw | Main loop + `os_key_pressed` |
+| At least one `alloc` / matching free | Buffers for target + typed text |
+| Boundary check via `math` | `os_in_bounds` before writing typed buffer |
+| Stable normal run | Raw mode restored on exit; allocations freed |
+
+## Scope note
+
+Phase 1 is integration and basic mechanics: one built-in sentence, no file loading or Phase 2 game-length features. That is intentional for this submission.

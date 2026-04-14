@@ -1,85 +1,92 @@
 #include "math.h"
 
-/* Multiply using repeated addition. */
 int os_mul(int a, int b) {
-    int result = 0;
     int negative = 0;
-    int count;
+    long long aa = a;
+    long long bb = b;
+    long long res = 0;
 
-    if (a < 0) {
-        a = -a;
-        negative = 1 - negative;
+    if (aa < 0) {
+        aa = -aa;
+        negative = !negative;
     }
-    if (b < 0) {
-        b = -b;
-        negative = 1 - negative;
+    if (bb < 0) {
+        bb = -bb;
+        negative = !negative;
     }
 
-    count = 0;
-    while (count < b) {
-        result += a;
-        count++;
+    while (bb > 0) {
+        if (bb & 1) {
+            res += aa;
+        }
+        aa <<= 1;
+        bb >>= 1;
     }
 
     if (negative) {
-        return -result;
+        res = -res;
     }
-    return result;
+    return (int)res;
 }
 
-/* Divide using repeated subtraction (integer division). */
+
 int os_div(int numerator, int denominator) {
-    int quotient = 0;
     int negative = 0;
+    int i;
+    long long x;
+    long long y;
+    unsigned long long ux;
+    unsigned long long uy;
+    unsigned long long res = 0;
 
     if (denominator == 0) {
         return 0;
     }
 
-    if (numerator < 0) {
-        numerator = -numerator;
-        negative = 1 - negative;
+    x = numerator;
+    y = denominator;
+
+    if (x < 0) {
+        x = -x;
+        negative = !negative;
     }
-    if (denominator < 0) {
-        denominator = -denominator;
-        negative = 1 - negative;
+    if (y < 0) {
+        y = -y;
+        negative = !negative;
     }
 
-    while (numerator >= denominator) {
-        numerator -= denominator;
-        quotient++;
+    ux = (unsigned long long)x;
+    uy = (unsigned long long)y;
+
+    if (uy == 0) {
+        return 0;
+    }
+
+    for (i = 63; i >= 0; i--) {
+        if ((ux >> i) >= uy) {
+            res += 1ULL << i;
+            ux -= uy << i;
+        }
     }
 
     if (negative) {
-        return -quotient;
+        return (int)(-(long long)res);
     }
-    return quotient;
+    return (int)res;
 }
 
-/* Modulo using repeated subtraction. */
+
 int os_mod(int numerator, int denominator) {
-    int negative = 0;
+    long long q;
+    long long prod;
 
     if (denominator == 0) {
         return 0;
     }
 
-    if (numerator < 0) {
-        numerator = -numerator;
-        negative = 1;
-    }
-    if (denominator < 0) {
-        denominator = -denominator;
-    }
-
-    while (numerator >= denominator) {
-        numerator -= denominator;
-    }
-
-    if (negative) {
-        return -numerator;
-    }
-    return numerator;
+    q = os_div(numerator, denominator);
+    prod = q * (long long)denominator;
+    return (int)((long long)numerator - prod);
 }
 
 int os_abs(int value) {

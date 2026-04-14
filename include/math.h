@@ -1,7 +1,6 @@
 #ifndef OS_MATH_H
 #define OS_MATH_H
 
-/* Basic math helpers built from scratch for this project. */
 int os_mul(int a, int b);
 int os_div(int numerator, int denominator);
 int os_mod(int numerator, int denominator);

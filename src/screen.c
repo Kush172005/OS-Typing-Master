@@ -2,7 +2,6 @@
 
 #include "screen.h"
 
-/* Clear full terminal and move cursor to top-left. */
 void os_screen_clear(void) {
     printf("\033[2J");
     printf("\033[H");
@@ -12,16 +11,13 @@ void os_screen_begin_frame(void) {
     printf("\033[H");
 }
 
-/* Move cursor to x,y coordinate. */
 void os_screen_move_cursor(int x, int y) {
     printf("\033[%d;%dH", y, x);
 }
 
-/* Draw text at a fixed position. */
 void os_screen_draw_text(int x, int y, const char *text) {
     os_screen_move_cursor(x, y);
     printf("%s", text);
-    /* Erase to end of line so shorter redraws do not leave stale characters. */
     printf("\033[K");
 }
 
@@ -29,7 +25,6 @@ void os_screen_draw_typing_overlay(int x, int y, const char *target,
                                    const char *typed, int typed_len) {
     int i = 0;
 
-    /* Avoid resetting SGR after every cell; some terminals flash or drop glyphs. */
     while (target[i] != '\0') {
         os_screen_move_cursor(x + i, y);
         if (i < typed_len) {
@@ -66,7 +61,6 @@ void os_screen_show_cursor(void) {
     printf("\033[?25h");
 }
 
-/* Flush output so the frame appears immediately. */
 void os_screen_flush(void) {
     fflush(stdout);
 }
