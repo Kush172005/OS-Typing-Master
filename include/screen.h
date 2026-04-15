@@ -3,6 +3,9 @@
 
 void os_screen_clear(void);
 void os_screen_begin_frame(void);
+void os_screen_alt_screen_enter(void);
+void os_screen_alt_screen_leave(void);
+int os_screen_term_cols(void);
 void os_screen_move_cursor(int x, int y);
 void os_screen_draw_text(int x, int y, const char *text);
 void os_screen_draw_typing_overlay(int x, int y, const char *target,

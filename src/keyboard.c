@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <termios.h>
@@ -60,6 +61,26 @@ int os_key_pressed(char *out_key) {
         return 1;
     }
 
+    return 0;
+}
+
+int os_keyboard_esc_is_lone(void) {
+    char c;
+    ssize_t n;
+
+    if (!g_keyboard_ready) {
+        return 1;
+    }
+
+    n = read(STDIN_FILENO, &c, 1);
+    if (n == 1) {
+        while (read(STDIN_FILENO, &c, 1) == 1) {
+        }
+        return 0;
+    }
+    if (n == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        return 1;
+    }
     return 0;
 }
 
