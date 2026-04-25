@@ -74,8 +74,9 @@ void os_screen_draw_typing_overlay(int x, int y, const char *target,
         return;
     }
 
+    os_screen_move_cursor(x, y);
+    
     while (target[i] != '\0' && i < budget) {
-        os_screen_move_cursor(x + i, y);
         if (i < typed_len) {
             if (typed[i] == target[i]) {
                 os_screen_set_color("1;32");
@@ -83,19 +84,17 @@ void os_screen_draw_typing_overlay(int x, int y, const char *target,
                 os_screen_set_color("1;31");
             }
             printf("%c", typed[i]);
+            os_screen_reset_color();
         } else {
             os_screen_set_color("2;37");
             printf("%c", target[i]);
+            os_screen_reset_color();
         }
         i++;
     }
-    os_screen_reset_color();
-    if (i > 0) {
-        os_screen_move_cursor(x + i, y);
-    } else {
-        os_screen_move_cursor(x, y);
-    }
+    
     printf("\033[K");
+    fflush(stdout);
 }
 
 void os_screen_set_color(const char *color_code) {
