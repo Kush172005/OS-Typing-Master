@@ -9,11 +9,12 @@ typedef struct {
     int is_free;
     int next_offset;
 } MemBlock;
+// hidden MemBlock header
 
 static union {
     long long alignment;
     unsigned char bytes[OS_VIRTUAL_RAM_SIZE];
-} g_virtual_ram;
+} g_virtual_ram; // 128 KB array of system memory
 
 static int g_initialized = 0;
 

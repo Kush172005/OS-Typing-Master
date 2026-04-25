@@ -106,6 +106,7 @@ int os_clamp(int value, int min_value, int max_value) {
     return value;
 }
 
+// Boundary check
 int os_in_bounds(int value, int min_value, int max_value_exclusive) {
     if (value < min_value) {
         return 0;

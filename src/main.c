@@ -11,6 +11,7 @@
 #define TYPED_BUFFER_SIZE 256
 #define START_LIVES 3
 
+// Jaise ki - test: 05
 static void safe_number_text(char *dest, const char *label, int value) {
     char num[32];
     int write_index = 0;
@@ -34,7 +35,7 @@ static void safe_number_text(char *dest, const char *label, int value) {
     dest[write_index] = '\0';
 }
 
-/* Longest correct prefix (same as combo run from the start of the line). */
+// Longest correct prefix hmare streak ko represent karta hain
 static int prefix_run_len(const char *typed, const char *target, int typed_len) {
     int n = 0;
 

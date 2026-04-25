@@ -18,10 +18,6 @@ void os_screen_clear(void) {
     printf("\033[H");
 }
 
-/*
- * Full clear + home every frame so resize/reflow cannot leave stale rows
- * stacked under fixed (x,y) drawing.
- */
 void os_screen_begin_frame(void) {
     printf("\033[2J");
     printf("\033[H");
