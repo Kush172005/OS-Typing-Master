@@ -85,10 +85,27 @@ static const char *builtin_lessons_hard[] = {
 };
 
 static volatile sig_atomic_t g_interrupted = 0;
+static volatile sig_atomic_t g_resized = 0;
 
-static void signal_handler(int sig) {
+static void interrupt_handler(int sig) {
     (void)sig;
     g_interrupted = 1;
+}
+
+static void resize_handler(int sig) {
+    (void)sig;
+    /* Terminal resize/minimize par quit nahi karna, bas next loop me redraw karna hai. */
+    g_resized = 1;
+}
+
+static int take_resize_event(void) {
+    /* Resize flag ko ek baar consume karo, taki har screen apna UI dobara draw kar sake. */
+    if (!g_resized) {
+        return 0;
+    }
+
+    g_resized = 0;
+    return 1;
 }
 
 static void safe_number_text(char *dest, const char *label, int value) {
@@ -118,12 +135,13 @@ static int calculate_wpm(int correct_chars, int elapsed_seconds) {
     if (elapsed_seconds <= 0) {
         return 0;
     }
-    int words = os_div(correct_chars, 5);
-    int minutes = os_div(elapsed_seconds, 60);
-    if (minutes <= 0) {
-        minutes = 1;
+
+    if (correct_chars <= 0) {
+        return 0;
     }
-    return os_div(words, minutes);
+
+    /* WPM = (correct chars / 5) words per elapsed minute; 12 = 60 / 5. */
+    return os_div(os_mul(correct_chars, 12), elapsed_seconds);
 }
 
 static int calculate_accuracy(int correct, int total) {
@@ -139,10 +157,7 @@ static int calculate_accuracy(int correct, int total) {
     return os_clamp(os_div(os_mul(correct, 100), total), 0, 100);
 }
 
-/*
- * Score and counts follow the current typed prefix only (fixes backspace:
- * removing a correct character lowers score again).
- */
+/* Score/current stats typed prefix se recalculate hote hain, backspace ke baad bhi sahi rahen. */
 static void recompute_prefix_stats(GameSession *session, const char *target,
                                    const char *typed, int typed_len) {
     int i;
@@ -642,11 +657,16 @@ static void run_game(GameSession *session) {
 
     draw_game_ui(session, target_sentence, typed_text, 0);
 
-    while (1) {
+    while (!g_interrupted) {
         char key;
         int need_repaint = 0;
         int elapsed;
         int current_second;
+
+        /* Resize/minimize event aaya to game band nahi hoga, sirf screen repaint hogi. */
+        if (take_resize_event()) {
+            need_repaint = 1;
+        }
 
         while (os_key_pressed(&key)) {
             need_repaint = 1;
@@ -760,6 +780,9 @@ static void run_game(GameSession *session) {
 
         usleep(16000);
     }
+
+    os_dealloc(typed_text);
+    os_dealloc(target_sentence);
 }
 
 int main(void) {
@@ -771,8 +794,9 @@ int main(void) {
         return 1;
     }
 
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    signal(SIGINT, interrupt_handler);
+    signal(SIGTERM, interrupt_handler);
+    signal(SIGWINCH, resize_handler); /* Terminal resize ka signal, game state ko change nahi karta. */
 
     os_memory_init();
 
@@ -793,7 +817,12 @@ int main(void) {
     while (session.state != STATE_QUIT && !g_interrupted) {
         if (session.state == STATE_MAIN_MENU) {
             draw_main_menu();
-            while (1) {
+            while (!g_interrupted) {
+                /* Menu screen ko new terminal size ke hisaab se dobara draw karo. */
+                if (take_resize_event()) {
+                    draw_main_menu();
+                }
+
                 if (os_key_pressed(&key)) {
                     if (key == '1') {
                         session.state = STATE_MODE_SELECT;
@@ -801,16 +830,26 @@ int main(void) {
                     } else if (key == '2') {
                         session.state = STATE_HIGHSCORES;
                         break;
-                    } else if (key == '3' || key == 27 || key == 'q' || key == 'Q') {
+                    } else if (key == '3' || key == 'q' || key == 'Q') {
                         session.state = STATE_QUIT;
                         break;
+                    } else if (key == 27) {
+                        if (os_keyboard_esc_is_lone()) {
+                            session.state = STATE_QUIT;
+                            break;
+                        }
                     }
                 }
                 usleep(16000);
             }
         } else if (session.state == STATE_MODE_SELECT) {
             draw_mode_select();
-            while (1) {
+            while (!g_interrupted) {
+                /* Resize ke baad selection menu ko refresh karo, game exit nahi hoga. */
+                if (take_resize_event()) {
+                    draw_mode_select();
+                }
+
                 if (os_key_pressed(&key)) {
                     if (key == '1') {
                         session.mode = MODE_PRACTICE;
@@ -841,7 +880,12 @@ int main(void) {
             }
         } else if (session.state == STATE_DIFFICULTY_SELECT) {
             draw_difficulty_select();
-            while (1) {
+            while (!g_interrupted) {
+                /* Difficulty screen resize par same state me rehkar redraw hoti hai. */
+                if (take_resize_event()) {
+                    draw_difficulty_select();
+                }
+
                 if (os_key_pressed(&key)) {
                     if (key == '1') {
                         session.difficulty = DIFF_EASY;
@@ -870,7 +914,7 @@ int main(void) {
             char name_buf[32] = {0}; // Naam store karne ke liye buffer
             int name_len = 0;        // Naam ki length track karne ke liye
             
-            while (1) {
+            while (!g_interrupted) {
                 // Screen set karo aur prompt dikhao
                 os_screen_begin_frame();
                 os_screen_reset_color();
@@ -913,8 +957,16 @@ int main(void) {
             }
         } else if (session.state == STATE_RESULTS) {
             draw_results(&session);
-            while (1) {
+            while (!g_interrupted) {
+                /* Results screen bhi resize par refresh ho, key press ki zarurat nahi. */
+                if (take_resize_event()) {
+                    draw_results(&session);
+                }
+
                 if (os_key_pressed(&key)) {
+                    if (key == 27 && !os_keyboard_esc_is_lone()) {
+                        continue;
+                    }
                     session.state = STATE_MAIN_MENU;
                     break;
                 }
@@ -922,8 +974,16 @@ int main(void) {
             }
         } else if (session.state == STATE_HIGHSCORES) {
             draw_highscores();
-            while (1) {
+            while (!g_interrupted) {
+                /* Highscore list ko current terminal size ke hisaab se redraw karo. */
+                if (take_resize_event()) {
+                    draw_highscores();
+                }
+
                 if (os_key_pressed(&key)) {
+                    if (key == 27 && !os_keyboard_esc_is_lone()) {
+                        continue;
+                    }
                     session.state = STATE_MAIN_MENU;
                     break;
                 }
