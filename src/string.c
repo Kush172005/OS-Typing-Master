@@ -59,6 +59,7 @@ int os_split_first_token(const char *input, char *token_out, int token_max) {
     return token_len;
 }
 
+// yaha par 0 add karne ka mtlb 48 + value karna hain(ASCII table)
 void os_int_to_string(int value, char *buffer, int buffer_size) {
     int temp[16];
     int digits = 0;

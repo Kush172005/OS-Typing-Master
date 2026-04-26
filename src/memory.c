@@ -9,7 +9,7 @@ typedef struct {
     int is_free;
     int next_offset;
 } MemBlock;
-// hidden MemBlock header
+// hidden MemBlock header for tracking
 
 static union {
     long long alignment;
