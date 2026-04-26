@@ -22,6 +22,7 @@ typedef enum {
     STATE_MODE_SELECT,
     STATE_DIFFICULTY_SELECT,
     STATE_PLAYING,
+    STATE_ENTER_NAME,
     STATE_RESULTS,
     STATE_HIGHSCORES,
     STATE_QUIT
@@ -62,6 +63,7 @@ typedef struct {
     int correct_typed;
     int finished;
     int lesson_index;
+    char player_name[32];
 } GameSession;
 
 static const char *builtin_lessons_easy[] = {
@@ -503,13 +505,13 @@ static void add_highscore(GameSession *session) {
     new_score.wpm = session->wpm;
     new_score.mode = session->mode;
 
-    for (i = 0; i < 6 && i < 30; i++) {
-        new_score.name[i] = "Player"[i];
-        if ("Player"[i] == '\0') {
+    for (i = 0; i < 31; i++) {
+        new_score.name[i] = session->player_name[i];
+        if (session->player_name[i] == '\0') {
             break;
         }
     }
-    new_score.name[6] = '\0';
+    new_score.name[31] = '\0';
 
     for (i = 0; i <= count && i < 10; i++) {
         if (i == count || new_score.score > scores[i].score) {
@@ -656,8 +658,7 @@ static void run_game(GameSession *session) {
                 usleep(400000);
                 os_dealloc(typed_text);
                 os_dealloc(target_sentence);
-                add_highscore(session);
-                session->state = STATE_RESULTS;
+                session->state = STATE_ENTER_NAME;
                 return;
             }
 
@@ -707,7 +708,7 @@ static void run_game(GameSession *session) {
                             play_game_over_animation();
                             os_dealloc(typed_text);
                             os_dealloc(target_sentence);
-                            session->state = STATE_RESULTS;
+                            session->state = STATE_ENTER_NAME;
                             return;
                         }
                     }
@@ -726,8 +727,7 @@ static void run_game(GameSession *session) {
                     
                     os_dealloc(typed_text);
                     os_dealloc(target_sentence);
-                    add_highscore(session);
-                    session->state = STATE_RESULTS;
+                    session->state = STATE_ENTER_NAME;
                     return;
                 }
             }
@@ -745,8 +745,7 @@ static void run_game(GameSession *session) {
                 usleep(800000);
                 os_dealloc(typed_text);
                 os_dealloc(target_sentence);
-                add_highscore(session);
-                session->state = STATE_RESULTS;
+                session->state = STATE_ENTER_NAME;
                 return;
             }
             if (current_second != last_second) {
@@ -867,6 +866,51 @@ int main(void) {
             }
         } else if (session.state == STATE_PLAYING) {
             run_game(&session);
+        } else if (session.state == STATE_ENTER_NAME) {
+            char name_buf[32] = {0}; // Naam store karne ke liye buffer
+            int name_len = 0;        // Naam ki length track karne ke liye
+            
+            while (1) {
+                // Screen set karo aur prompt dikhao
+                os_screen_begin_frame();
+                os_screen_reset_color();
+                os_screen_set_color("1;33");
+                os_screen_draw_text(25, 5, "ENTER YOUR NAME FOR HIGH SCORE:");
+                os_screen_reset_color();
+                os_screen_draw_text(25, 7, ">> ");
+                os_screen_draw_text(28, 7, name_buf); // Jo abhi tak likha hai wo screen par dikhao
+                os_screen_draw_text(20, 15, "Press ENTER to confirm");
+                os_screen_flush();
+                
+                if (os_key_pressed(&key)) {
+                    // Agar Enter dabaya toh naam save kar lo
+                    if (key == '\n' || key == '\r') {
+                        // Agar koi naam nahi likha, toh default naam "Player" rakh do
+                        if (name_len == 0) {
+                            os_strcpy(session.player_name, "Player");
+                        } else {
+                            // Warna jo likha hai wo session mein daal do
+                            os_strcpy(session.player_name, name_buf);
+                        }
+                        
+                        add_highscore(&session);       // Highscore file mein save karo
+                        session.state = STATE_RESULTS; // Results screen par bhejo
+                        break;
+                    } 
+                    // Agar Backspace dabaya, toh aakhri akshar (character) mita do
+                    else if ((key == 127 || key == 8) && name_len > 0) {
+                        name_len--;
+                        name_buf[name_len] = '\0';
+                    } 
+                    // Normal characters ko naam mein add karo (max 30 length tak)
+                    else if (key >= 32 && key <= 126 && name_len < 30) {
+                        name_buf[name_len] = key;
+                        name_len++;
+                        name_buf[name_len] = '\0'; // String ka end mark karo
+                    }
+                }
+                usleep(16000); // CPU ko thoda rest dene ke liye ruk jao
+            }
         } else if (session.state == STATE_RESULTS) {
             draw_results(&session);
             while (1) {
