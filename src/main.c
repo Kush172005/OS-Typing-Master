@@ -66,6 +66,7 @@ typedef struct {
     char player_name[32];
 } GameSession;
 
+//improve it
 static const char *builtin_lessons_easy[] = {
     "the quick brown fox jumps over the lazy dog",
     "practice makes perfect typing skills better",
@@ -94,12 +95,12 @@ static void interrupt_handler(int sig) {
 
 static void resize_handler(int sig) {
     (void)sig;
-    /* Terminal resize/minimize par quit nahi karna, bas next loop me redraw karna hai. */
+    // Terminal resize/minimize par quit nahi karna, bas next loop me redraw karna hai.
     g_resized = 1;
 }
 
 static int take_resize_event(void) {
-    /* Resize flag ko ek baar consume karo, taki har screen apna UI dobara draw kar sake. */
+    // Resize flag ko ek baar consume karo, taki har screen apna UI dobara draw kar sake.
     if (!g_resized) {
         return 0;
     }
@@ -140,7 +141,7 @@ static int calculate_wpm(int correct_chars, int elapsed_seconds) {
         return 0;
     }
 
-    /* WPM = (correct chars / 5) words per elapsed minute; 12 = 60 / 5. */
+    // WPM = (correct_chars * 12) / elapsed_seconds 
     return os_div(os_mul(correct_chars, 12), elapsed_seconds);
 }
 
@@ -157,7 +158,7 @@ static int calculate_accuracy(int correct, int total) {
     return os_clamp(os_div(os_mul(correct, 100), total), 0, 100);
 }
 
-/* Score/current stats typed prefix se recalculate hote hain, backspace ke baad bhi sahi rahen. */
+// Score/current stats typed prefix se recalculate hote hain, backspace ke baad bhi sahi rahen.
 static void recompute_prefix_stats(GameSession *session, const char *target,
                                    const char *typed, int typed_len) {
     int i;
@@ -187,7 +188,7 @@ static void draw_main_menu(void) {
     os_screen_set_color("1;36");
     os_screen_draw_text(20, 2, "╔══════════════════════════════════════╗");
     os_screen_draw_text(20, 3, "║                                      ║");
-    os_screen_draw_text(20, 4, "║        TYPING RUSH - PHASE 2         ║");
+    os_screen_draw_text(20, 4, "║          OS TYPING MASTER            ║");
     os_screen_draw_text(20, 5, "║                                      ║");
     os_screen_draw_text(20, 6, "╚══════════════════════════════════════╝");
     os_screen_reset_color();
@@ -671,7 +672,7 @@ static void run_game(GameSession *session) {
         while (os_key_pressed(&key)) {
             need_repaint = 1;
 
-            if (key == KEY_END_ROUND) {
+            if (key == KEY_END_ROUND) { //Tab Key
                 session->finished = 0;
                 recompute_prefix_stats(session, target_sentence, typed_text, typed_len);
                 draw_game_ui(session, target_sentence, typed_text, typed_len);
@@ -682,7 +683,7 @@ static void run_game(GameSession *session) {
                 return;
             }
 
-            if (key == 27) {
+            if (key == 27) { //ESC Key
                 if (os_keyboard_esc_is_lone()) {
                     os_dealloc(typed_text);
                     os_dealloc(target_sentence);
@@ -692,11 +693,11 @@ static void run_game(GameSession *session) {
                 continue;
             }
 
-            if (key == '\n' || key == '\r') {
+            if (key == '\n' || key == '\r') { // Enter key is ignored during typing
                 continue;
             }
 
-            if (key == 127 || key == 8) {
+            if (key == 127 || key == 8) { //Backspace
                 if (typed_len > 0) {
                     typed_len--;
                     typed_text[typed_len] = '\0';
@@ -911,8 +912,8 @@ int main(void) {
         } else if (session.state == STATE_PLAYING) {
             run_game(&session);
         } else if (session.state == STATE_ENTER_NAME) {
-            char name_buf[32] = {0}; // Naam store karne ke liye buffer
-            int name_len = 0;        // Naam ki length track karne ke liye
+            char name_buf[32] = {0}; 
+            int name_len = 0;      
             
             while (!g_interrupted) {
                 // Screen set karo aur prompt dikhao
@@ -922,43 +923,38 @@ int main(void) {
                 os_screen_draw_text(25, 5, "ENTER YOUR NAME FOR HIGH SCORE:");
                 os_screen_reset_color();
                 os_screen_draw_text(25, 7, ">> ");
-                os_screen_draw_text(28, 7, name_buf); // Jo abhi tak likha hai wo screen par dikhao
+                os_screen_draw_text(28, 7, name_buf);
                 os_screen_draw_text(20, 15, "Press ENTER to confirm");
                 os_screen_flush();
                 
                 if (os_key_pressed(&key)) {
-                    // Agar Enter dabaya toh naam save kar lo
                     if (key == '\n' || key == '\r') {
-                        // Agar koi naam nahi likha, toh default naam "Player" rakh do
                         if (name_len == 0) {
                             os_strcpy(session.player_name, "Player");
                         } else {
-                            // Warna jo likha hai wo session mein daal do
                             os_strcpy(session.player_name, name_buf);
                         }
                         
-                        add_highscore(&session);       // Highscore file mein save karo
-                        session.state = STATE_RESULTS; // Results screen par bhejo
+                        add_highscore(&session);       
+                        session.state = STATE_RESULTS; 
                         break;
                     } 
-                    // Agar Backspace dabaya, toh aakhri akshar (character) mita do
                     else if ((key == 127 || key == 8) && name_len > 0) {
                         name_len--;
                         name_buf[name_len] = '\0';
                     } 
-                    // Normal characters ko naam mein add karo (max 30 length tak)
                     else if (key >= 32 && key <= 126 && name_len < 30) {
                         name_buf[name_len] = key;
                         name_len++;
-                        name_buf[name_len] = '\0'; // String ka end mark karo
+                        name_buf[name_len] = '\0'; 
                     }
                 }
-                usleep(16000); // CPU ko thoda rest dene ke liye ruk jao
+                usleep(16000); 
             }
         } else if (session.state == STATE_RESULTS) {
             draw_results(&session);
             while (!g_interrupted) {
-                /* Results screen bhi resize par refresh ho, key press ki zarurat nahi. */
+                // Results screen bhi resize par refresh ho, key press ki zarurat nahi.
                 if (take_resize_event()) {
                     draw_results(&session);
                 }
@@ -975,7 +971,6 @@ int main(void) {
         } else if (session.state == STATE_HIGHSCORES) {
             draw_highscores();
             while (!g_interrupted) {
-                /* Highscore list ko current terminal size ke hisaab se redraw karo. */
                 if (take_resize_event()) {
                     draw_highscores();
                 }
